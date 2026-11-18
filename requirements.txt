@@ -1,0 +1,14 @@
+# Install a matching CUDA-enabled torch/torchvision pair first (see README).
+numpy<2
+Pillow
+PyYAML
+easydict
+tqdm
+timm==0.4.12
+opencv-python<4.12
+scipy
+scikit-image
+matplotlib
+opt-einsum
+# Optional experiment logging, disabled unless --wandb is supplied.
+wandb

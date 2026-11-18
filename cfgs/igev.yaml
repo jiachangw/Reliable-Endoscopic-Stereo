@@ -1,0 +1,59 @@
+# Portable student recipe, based on igev_rigidfinal.yaml.
+DATA_CONFIG:
+    DATA_INFOS:
+        - DATASET: RigidEndoDataset
+          DATA_PATH: data/pseudo
+          EVAL_DATA_PATH: data/scared
+          DATA_SPLIT:
+              TRAINING: data/splits/train.txt
+              EVALUATING: data/splits/scared_test.txt
+          LOAD_TO_MEMORY: false
+    DATA_TRANSFORM:
+        TRAINING:
+            - {NAME: StereoColorJitter, BRIGHTNESS: [0.6, 1.4], CONTRAST: [0.6, 1.4], SATURATION: [0.6, 1.4], HUE: 0.5, ASYMMETRIC_PROB: 0.2}
+            - {NAME: RandomErase, PROB: 0.5, MAX_TIME: 2, BOUNDS: [50, 100]}
+            - {NAME: RandomScale, SIZE: [320, 608], MIN_SCALE: -0.2, MAX_SCALE: 0.4, SCALE_PROB: 0.8, STRETCH_PROB: 0.8}
+            - {NAME: RandomCrop, SIZE: [320, 608], Y_JITTER: false}
+            - {NAME: TransposeImage}
+            - {NAME: ToTensor}
+        EVALUATING:
+            - {NAME: RightTopPad, SIZE: [1024, 1280]}
+            - {NAME: TransposeImage}
+            - {NAME: ToTensor}
+MODEL:
+    NAME: IGEV
+    MAX_DISP: 192
+    ignore_ratio: 0
+    HIDDEN_DIMS: [128, 128, 128]
+    N_GRU_LAYERS: 3
+    N_DOWNSAMPLE: 2
+    SLOW_FAST_GRU: true
+    CORR_LEVELS: 2
+    CORR_RADIUS: 4
+    TRAIN_ITERS: 22
+    VALID_ITERS: 32
+    FIND_UNUSED_PARAMETERS: true
+    CKPT: -1
+    PRETRAINED_MODEL: null
+    STRICT_LOAD: true
+OPTIMIZATION:
+    FREEZE_BN: true
+    SYNC_BN: true
+    AMP: false
+    BATCH_SIZE_PER_GPU: 2
+    NUM_EPOCHS: 5
+    MAX_ITER: 150000
+    OPTIMIZER: {NAME: AdamW, LR: 0.00002, WEIGHT_DECAY: 1.0e-05, EPS: 1.0e-08}
+    SCHEDULER: {NAME: OneCycleLR, MAX_LR: 0.00002, PCT_START: 0.01, ON_EPOCH: false, CYCLE_MOMENTUM: false, ANNEAL_STRATEGY: linear}
+    CLIP_GRAD: {TYPE: norm, MAX_NORM: 1.0, NORM_TYPE: 2}
+EVALUATOR:
+    BATCH_SIZE_PER_GPU: 1
+    MAX_DISP: 192
+    METRIC: [d1_all, epe, thres_1, thres_2, thres_3]
+TRAINER:
+    EVAL_INTERVAL: 1
+    CKPT_SAVE_INTERVAL: 1
+    MAX_CKPT_SAVE_NUM: 5
+    LOGGER_ITER_INTERVAL: 50
+    TRAIN_VISUALIZATION: false
+    EVAL_VISUALIZATION: false

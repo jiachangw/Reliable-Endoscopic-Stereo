@@ -1,0 +1,57 @@
+# Portable student recipe, based on lightstereo_l_rigidfinal.yaml.
+DATA_CONFIG:
+    DATA_INFOS:
+        - DATASET: RigidEndoDataset
+          DATA_PATH: data/pseudo
+          EVAL_DATA_PATH: data/scared
+          DATA_SPLIT:
+              TRAINING: data/splits/train.txt
+              EVALUATING: data/splits/scared_test.txt
+          LOAD_TO_MEMORY: false
+    DATA_TRANSFORM:
+        TRAINING:
+            - {NAME: StereoColorJitter, BRIGHTNESS: [0.6, 1.4], CONTRAST: [0.6, 1.4], SATURATION: [0.6, 1.4], HUE: 0.5, ASYMMETRIC_PROB: 0.2}
+            - {NAME: RandomErase, PROB: 0.5, MAX_TIME: 2, BOUNDS: [50, 100]}
+            - {NAME: RandomScale, SIZE: [320, 608], MIN_SCALE: -0.2, MAX_SCALE: 0.4, SCALE_PROB: 0.8, STRETCH_PROB: 0.8}
+            - {NAME: RandomCrop, SIZE: [320, 608], Y_JITTER: false}
+            - {NAME: TransposeImage}
+            - {NAME: ToTensor}
+            - {NAME: NormalizeImage, MEAN: [0.485, 0.456, 0.406], STD: [0.229, 0.224, 0.225]}
+        EVALUATING:
+            - {NAME: RightTopPad, SIZE: [1024, 1280]}
+            - {NAME: TransposeImage}
+            - {NAME: ToTensor}
+            - {NAME: NormalizeImage, MEAN: [0.485, 0.456, 0.406], STD: [0.229, 0.224, 0.225]}
+MODEL:
+    NAME: LightStereo
+    MAX_DISP: 192
+    EXPANSE_RATIO: 8
+    AGGREGATION_BLOCKS: [8, 16, 32]
+    LEFT_ATT: true
+    FIND_UNUSED_PARAMETERS: false
+    CKPT: -1
+    ignore_ratio: 0
+    GM_RATIO: 0
+    PRETRAINED_MODEL: null
+    STRICT_LOAD: true
+OPTIMIZATION:
+    FREEZE_BN: false
+    SYNC_BN: false
+    AMP: true
+    BATCH_SIZE_PER_GPU: 8
+    NUM_EPOCHS: 5
+    MAX_ITER: 120000
+    OPTIMIZER: {NAME: AdamW, LR: 0.00008, WEIGHT_DECAY: 1.0e-05, EPS: 1.0e-08}
+    SCHEDULER: {NAME: OneCycleLR, MAX_LR: 0.00008, PCT_START: 0.01, ON_EPOCH: false, ANNEAL_STRATEGY: linear}
+    CLIP_GRAD: {TYPE: norm, MAX_NORM: 1.0, NORM_TYPE: 2}
+EVALUATOR:
+    BATCH_SIZE_PER_GPU: 1
+    MAX_DISP: 192
+    METRIC: [d1_all, epe, thres_1, thres_2, thres_3]
+TRAINER:
+    EVAL_INTERVAL: 1
+    CKPT_SAVE_INTERVAL: 1
+    MAX_CKPT_SAVE_NUM: 30
+    LOGGER_ITER_INTERVAL: 100
+    TRAIN_VISUALIZATION: false
+    EVAL_VISUALIZATION: false
